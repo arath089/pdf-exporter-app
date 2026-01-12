@@ -79,7 +79,7 @@ export function buildMcpServer() {
       }
 
       return {
-        content: [{ type: "text", text: "Editor opened." }],
+        content: [{ type: "text" as const, text: "Editor opened." }],
         structuredContent: {
           seedText,
           preset,
@@ -107,7 +107,7 @@ export function buildMcpServer() {
       const parsed = CreatePdfInput.safeParse(args);
       if (!parsed.success) {
         return {
-          content: [{ type: "text", text: "Invalid input." }],
+          content: [{ type: "text" as const, text: "Invalid input." }],
           structuredContent: {
             ok: false,
             error: parsed.error.flatten(),
@@ -128,7 +128,9 @@ export function buildMcpServer() {
         const remaining = Math.max(0, FREE_MAX_EXPORTS - usage.count);
 
         return {
-          content: [{ type: "text", text: "Upgrade required (length limit)." }],
+          content: [
+            { type: "text" as const, text: "Upgrade required (length limit)." },
+          ],
           structuredContent: {
             ok: false,
             upgrade: true,
@@ -150,7 +152,10 @@ export function buildMcpServer() {
       if (usage.count >= FREE_MAX_EXPORTS) {
         return {
           content: [
-            { type: "text", text: "Upgrade required (daily export limit)." },
+            {
+              type: "text" as const,
+              text: "Upgrade required (daily export limit).",
+            },
           ],
           structuredContent: {
             ok: false,
@@ -187,7 +192,7 @@ export function buildMcpServer() {
         const remaining = Math.max(0, FREE_MAX_EXPORTS - usage.count);
 
         return {
-          content: [{ type: "text", text: "PDF ready." }],
+          content: [{ type: "text" as const, text: "PDF ready." }],
           structuredContent: {
             ok: true,
             fileName,
@@ -202,7 +207,7 @@ export function buildMcpServer() {
       } catch (err: any) {
         console.error("create_pdf failed:", err);
         return {
-          content: [{ type: "text", text: "Failed to generate PDF." }],
+          content: [{ type: "text" as const, text: "Failed to generate PDF." }],
           structuredContent: {
             ok: false,
             error: err?.message || String(err),
