@@ -1,30 +1,26 @@
-# fly.toml app configuration file generated for pdf-exporter-blue-fog-9851 on 2026-01-12T14:54:26+05:30
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+app = "pdf-exporter"
 
-app = 'pdf-exporter'
-primary_region = 'iad'
+primary_region = "iad"
 
 [build]
-  dockerfile = 'Dockerfile'
+  dockerfile = "Dockerfile"
 
 [env]
-  FREE_MAX_CHARS = '1500'
-  FREE_MAX_EXPORTS = '3'
-  NODE_ENV = 'production'
-  PORT = '3000'
-  PRO_MAX_CHARS = '20000'
-  UPGRADE_URL = 'https://pdf-exporter.com/upgrade'
+  NODE_ENV = "production"
+  PORT = "3000"
+
+  FREE_MAX_CHARS = "1500"
+  FREE_MAX_EXPORTS = "3"
+  PRO_MAX_CHARS = "20000"
+  UPGRADE_URL = "https://pdf-exporter.com/upgrade"
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = false
   auto_start_machines = true
+  auto_stop_machines = true
   min_machines_running = 1
-  processes = ['app']
 
 [[vm]]
-  size = 'shared-cpu-1x'
-  memory = '512mb'
+  size = "shared-cpu-1x"
+  memory = "512mb"
