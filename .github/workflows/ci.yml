@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root deps (if you use root package.json)
+        run: |
+          if [ -f package.json ]; then npm ci; fi
+
+      - name: Install server deps
+        run: |
+          if [ -f server/package.json ]; then cd server && npm ci; fi
+
+      - name: Install web deps
+        run: |
+          if [ -f web/package.json ]; then cd web && npm ci; fi
+
+      - name: Build web
+        run: |
+          if [ -f web/package.json ]; then cd web && npm run build; fi
