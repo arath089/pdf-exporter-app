@@ -2,33 +2,29 @@ import fs from "node:fs";
 import path from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
+function webDistPath(...parts: string[]) {
+  return path.join(process.cwd(), "web", "dist", ...parts);
+}
+
 function readManifest() {
-  const manifestPath = path.join(
-    process.cwd(),
-    "..",
-    "web",
-    "dist",
-    ".vite",
-    "manifest.json"
-  );
+  const manifestPath = webDistPath(".vite", "manifest.json");
   return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 }
 
 function readAsset(relPath: string) {
-  const p = path.join(process.cwd(), "..", "web", "dist", relPath);
+  const p = webDistPath(relPath);
   return fs.readFileSync(p, "utf8");
 }
 
 export function registerPdfWidget(server: McpServer) {
   const manifest = readManifest();
 
-  // Vite vanilla template entry is usually index.html → src/main.js
-  // In manifest, look for the entry with isEntry: true
   const entry = Object.values<any>(manifest).find((v) => v.isEntry);
-  if (!entry)
+  if (!entry) {
     throw new Error(
       "Vite manifest has no entry. Ensure build.manifest=true and web is built."
     );
+  }
 
   const js = readAsset(entry.file);
   const css = (entry.css ?? []).map((c: string) => readAsset(c)).join("\n");
@@ -44,9 +40,8 @@ export function registerPdfWidget(server: McpServer) {
 <div id="app"></div>
 <style>${css}</style>
 <script type="module">${js}</script>
-          `.trim(),
+        `.trim(),
         _meta: {
-          // Optional but nice:
           "openai/widgetPrefersBorder": true,
         },
       },
