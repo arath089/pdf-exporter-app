@@ -5,6 +5,17 @@ import sanitizeHtml from "sanitize-html";
 
 type Preset = "report" | "notes" | "resume";
 
+let browserPromise: ReturnType<typeof chromium.launch> | null = null;
+
+async function getBrowser() {
+  if (!browserPromise) {
+    browserPromise = chromium.launch({
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
+  }
+  return browserPromise;
+}
+
 function presetTitle(preset: Preset) {
   if (preset === "resume") return "Resume";
   if (preset === "notes") return "Notes";
@@ -88,10 +99,12 @@ export async function renderPdf(opts: {
 </body>
 </html>`;
 
-  const browser = await chromium.launch();
+  const browser = await getBrowser();
+  const context = await browser.newContext();
+
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "load" });
+    const page = await context.newPage();
+    await page.setContent(html, { waitUntil: "load", timeout: 30000 });
 
     await page.pdf({
       path: filePath,
@@ -101,6 +114,6 @@ export async function renderPdf(opts: {
 
     return { filePath, fileName };
   } finally {
-    await browser.close();
+    await context.close();
   }
 }
