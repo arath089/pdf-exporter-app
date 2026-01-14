@@ -220,17 +220,19 @@ app.get("/downloads/:file", (req, res) => {
 /* Website (serve Vite build from same server)                         */
 /* ------------------------------------------------------------------ */
 
-const WEB_DIST = path.join(process.cwd(), "..", "web", "dist");
+// Website (serve Vite build from same server)
+const WEB_DIST = path.resolve(__dirname, "../../web/dist");
+console.log("WEB_DIST =", WEB_DIST);
 
-// Serve static assets (JS/CSS)
+// Serve static assets (JS/CSS + index.html)
 app.use(express.static(WEB_DIST));
 
-// SPA routes
-app.get("/", (_req, res) => {
+// SPA routes (serve index.html for app routes)
+app.get(["/", "/upgrade"], (_req, res) => {
   res.sendFile(path.join(WEB_DIST, "index.html"));
 });
 
-app.get("/upgrade", (_req, res) => {
+app.get("/index.html", (_req, res) => {
   res.sendFile(path.join(WEB_DIST, "index.html"));
 });
 
