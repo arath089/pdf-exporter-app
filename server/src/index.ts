@@ -16,6 +16,16 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 /* ------------------------------------------------------------------ */
 
 const app = express();
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    console.log(
+      `[HTTP] ${req.method} ${req.url} -> ${res.statusCode} (${ms}ms)`
+    );
+  });
+  next();
+});
 app.use(cors());
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -131,6 +141,12 @@ app.post("/api/create-pdf", async (req, res) => {
   const { rawText, preset } = parsed.data;
   const clientId = getClientIdFromReq(req);
 
+  console.log("[API] /api/create-pdf hit", {
+    chars: rawText.length,
+    preset,
+    clientId,
+  });
+
   // ---- Freemium: length gate
   if (rawText.length > FREE_MAX_CHARS) {
     const usage = getOrInitUsage(clientId);
@@ -167,12 +183,14 @@ app.post("/api/create-pdf", async (req, res) => {
   const id = nanoid(10);
 
   try {
+    console.log("[API] starting renderPdf");
     const { fileName } = await renderPdf({
       id,
       rawText,
       preset,
       outDir: OUT_DIR,
     });
+    console.log("[API] renderPdf done", { fileName });
 
     const downloadUrl = `${PUBLIC_BASE_URL}/downloads/${fileName}`;
 
@@ -191,6 +209,7 @@ app.post("/api/create-pdf", async (req, res) => {
       upgradeUrl: UPGRADE_URL,
     });
   } catch (err: any) {
+    console.error("[API] renderPdf error", err);
     res.status(500).json({
       ok: false,
       error: err?.message || "Failed to create PDF",

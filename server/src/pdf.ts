@@ -8,11 +8,13 @@ type Preset = "report" | "notes" | "resume";
 let browserPromise: ReturnType<typeof chromium.launch> | null = null;
 
 async function getBrowser() {
+  console.log("[PDF] launching chromium...");
   if (!browserPromise) {
     browserPromise = chromium.launch({
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
     });
   }
+  console.log("[PDF] chromium launched");
   return browserPromise;
 }
 
@@ -103,6 +105,7 @@ export async function renderPdf(opts: {
   const context = await browser.newContext();
 
   try {
+    console.log("[PDF] setContent start");
     const page = await context.newPage();
     await page.setContent(html, { waitUntil: "load", timeout: 30000 });
 
@@ -112,6 +115,7 @@ export async function renderPdf(opts: {
       printBackground: true,
     });
 
+    console.log("[PDF] pdf() done");
     return { filePath, fileName };
   } finally {
     await context.close();
