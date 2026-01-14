@@ -118,12 +118,16 @@ export async function renderPdf(opts: {
       await page.waitForTimeout(50);
 
       console.log("[PDF] pdf() start");
-      await page.pdf({
-        path: filePath,
-        format: "A4",
-        printBackground: true,
-        timeout: 20000,
-      });
+      await Promise.race([
+        page.pdf({
+          path: filePath,
+          format: "A4",
+          printBackground: true,
+        }),
+        new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error("PDF generation timed out")), 20000)
+        ),
+      ]);
       console.log("[PDF] pdf() done", fileName);
 
       return { filePath, fileName };
