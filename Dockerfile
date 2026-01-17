@@ -1,8 +1,14 @@
 FROM node:20-slim
 
-# System deps for Playwright Chromium
+# Let Playwright store browsers here
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV NODE_ENV=production
+
+# Install deps for Playwright/Chromium
 RUN apt-get update && apt-get install -y \
   ca-certificates \
+  wget \
+  gnupg \
   fonts-liberation \
   libasound2 \
   libatk-bridge2.0-0 \
@@ -28,6 +34,9 @@ RUN apt-get update && apt-get install -y \
   libxi6 \
   libegl1 \
   libopengl0 \
+  libdbus-1-3 \
+  xdg-utils \
+  --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -38,15 +47,18 @@ COPY web/package*.json ./web/
 RUN cd server && npm ci
 RUN cd web && npm ci
 
-RUN cd server && npx playwright install --with-deps chromium
+# Install browsers into /ms-playwright
+RUN cd server && npx playwright install chromium
 
+# Copy source
 COPY server ./server
 COPY web ./web
 
+# Build
 RUN cd server && npm run build
 RUN cd web && npm run build
 
-# ✅ add this
+# Ensure tmp exists for persistent profile
 RUN mkdir -p /tmp/pw-profile && chmod -R 777 /tmp
 
 EXPOSE 3000
