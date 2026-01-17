@@ -15,16 +15,10 @@ function presetTitle(preset: Preset) {
 let browserPromise: Promise<Browser> | null = null;
 async function getBrowser() {
   if (!browserPromise) {
-    console.log("[PDF] launching chromium...");
     browserPromise = chromium
-      .launch({
-        args: ["--no-sandbox", "--disable-dev-shm-usage"],
-        timeout: 30000,
-      })
+      .launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] })
       .then((b) => {
-        console.log("[PDF] chromium launched");
         b.on("disconnected", () => {
-          console.log("[PDF] chromium disconnected; resetting browserPromise");
           browserPromise = null;
         });
         return b;

@@ -187,7 +187,7 @@ app.post("/api/create-pdf", async (req, res) => {
     const { fileName } = await Promise.race([
       renderPdf({ id, rawText, preset, outDir: OUT_DIR }),
       new Promise<never>((_, rej) =>
-        setTimeout(() => rej(new Error("PDF generation timed out")), 25000)
+        setTimeout(() => rej(new Error("PDF generation timed out")), 60000)
       ),
     ]);
     console.log("[API] renderPdf done", { fileName });
