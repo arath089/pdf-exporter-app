@@ -32,25 +32,22 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy manifests first for layer caching
 COPY server/package*.json ./server/
 COPY web/package*.json ./web/
 
-# Install deps
 RUN cd server && npm ci
 RUN cd web && npm ci
 
-# Install Playwright browser
 RUN cd server && npx playwright install --with-deps chromium
 
-# Copy source
 COPY server ./server
 COPY web ./web
 
-# Build server + web
 RUN cd server && npm run build
 RUN cd web && npm run build
 
-# Expose + run
+# ✅ add this
+RUN mkdir -p /tmp/pw-profile && chmod -R 777 /tmp
+
 EXPOSE 3000
 CMD ["node", "server/dist/index.js"]

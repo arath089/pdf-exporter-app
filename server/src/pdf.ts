@@ -1,5 +1,5 @@
 import path from "node:path";
-import { chromium, type Browser } from "playwright";
+import { chromium, type BrowserContext, type Page } from "playwright";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
@@ -29,38 +29,38 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   ]);
 }
 
-// Reuse a single browser (stable on VMs)
-let browserPromise: Promise<Browser> | null = null;
+// ✅ Persistent context (more stable on Fly)
+let ctxPromise: Promise<BrowserContext> | null = null;
 
-async function getBrowser() {
-  if (!browserPromise) {
-    console.log("[PDF] launching chromium...");
-    mem("before chromium.launch");
+async function getContext() {
+  if (!ctxPromise) {
+    console.log("[PDF] launchPersistentContext...");
+    mem("before launchPersistentContext");
 
-    browserPromise = withTimeout(
-      chromium.launch({
+    ctxPromise = withTimeout(
+      chromium.launchPersistentContext("/tmp/pw-profile", {
+        headless: true,
         args: ["--no-sandbox", "--disable-dev-shm-usage"],
       }),
-      30000,
-      "chromium.launch"
-    ).then((b) => {
-      console.log("[PDF] chromium launched");
-      mem("after chromium.launch");
+      60000,
+      "launchPersistentContext"
+    ).then((ctx) => {
+      console.log("[PDF] persistent context ready");
+      mem("after launchPersistentContext");
 
-      b.on("disconnected", () => {
-        console.log(
-          "[PDF] chromium disconnected (likely OOM/crash). Resetting browserPromise."
-        );
-        browserPromise = null;
+      ctx.on("close", () => {
+        console.log("[PDF] context closed; resetting");
+        ctxPromise = null;
       });
 
-      return b;
+      return ctx;
     });
   }
-  return browserPromise;
+
+  return ctxPromise;
 }
 
-// Simple queue to avoid concurrent chromium pressure
+// Queue to avoid concurrent pressure
 let queue: Promise<any> = Promise.resolve();
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   const run = queue.then(fn, fn);
@@ -148,54 +148,44 @@ export async function renderPdf(opts: {
 </body>
 </html>`;
 
-      stamp("getBrowser");
-      const browser = await getBrowser();
+      stamp("getContext");
+      const ctx = await getContext();
 
-      stamp("newContext");
-      const context = await withTimeout(
-        browser.newContext(),
-        30000,
-        "browser.newContext"
+      stamp("newPage");
+      const page: Page = await withTimeout(
+        ctx.newPage(),
+        60000,
+        "context.newPage"
       );
 
       try {
-        stamp("newPage");
-        const page = await withTimeout(
-          context.newPage(),
-          30000,
-          "context.newPage"
-        );
-
         console.log(`[PDF] setContent start (${elapsed()})`);
         stamp("setContent");
+
         await withTimeout(
           page.setContent(html, { waitUntil: "domcontentloaded" }),
-          20000,
+          60000,
           "page.setContent"
         );
-        console.log(`[PDF] setContent done (${elapsed()})`);
 
-        // Small settle delay for fonts/layout
+        console.log(`[PDF] setContent done (${elapsed()})`);
         await page.waitForTimeout(50);
 
         console.log(`[PDF] pdf start (${elapsed()})`);
         stamp("pdf");
+
         await withTimeout(
-          page.pdf({
-            path: filePath,
-            format: "A4",
-            printBackground: true,
-          }),
-          20000,
+          page.pdf({ path: filePath, format: "A4", printBackground: true }),
+          60000,
           "page.pdf"
         );
-        console.log(`[PDF] pdf done (${elapsed()}) file=${fileName}`);
 
+        console.log(`[PDF] pdf done (${elapsed()}) file=${fileName}`);
         stamp("done");
+
         return { filePath, fileName };
       } finally {
-        stamp("context.close");
-        await withTimeout(context.close(), 10000, "context.close");
+        await page.close().catch(() => {});
       }
     } catch (err: any) {
       console.error("[PDF] FAILED at stage:", stage, "after", elapsed());

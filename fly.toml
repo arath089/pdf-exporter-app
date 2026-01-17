@@ -1,5 +1,4 @@
 app = "pdf-exporter"
-
 primary_region = "bom"
 
 [build]
@@ -8,6 +7,8 @@ primary_region = "bom"
 [env]
   NODE_ENV = "production"
   PORT = "3000"
+  TMPDIR = "/tmp"
+  PLAYWRIGHT_BROWSERS_PATH = "0"
 
   FREE_MAX_CHARS = "1500"
   FREE_MAX_EXPORTS = "3"
@@ -22,5 +23,5 @@ primary_region = "bom"
   min_machines_running = 1
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = "shared-cpu-2x"
+  memory = "2048mb"
