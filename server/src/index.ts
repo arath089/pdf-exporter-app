@@ -192,7 +192,8 @@ app.post("/api/create-pdf", async (req, res) => {
     ]);
     console.log("[API] renderPdf done", { fileName });
 
-    const downloadUrl = `${PUBLIC_BASE_URL}/downloads/${fileName}`;
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const downloadUrl = `${baseUrl}/downloads/${fileName}`;
 
     usage.count += 1;
     const remaining = Math.max(0, FREE_MAX_EXPORTS - usage.count);

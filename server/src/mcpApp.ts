@@ -186,7 +186,11 @@ export function buildMcpServer() {
           process.env.PUBLIC_BASE_URL ||
           `http://localhost:${process.env.PORT || 3000}`;
 
-        const downloadUrl = `${publicBaseUrl}/downloads/${fileName}`;
+        const baseUrl = process.env.UPGRADE_URL
+          ? new URL(process.env.UPGRADE_URL).origin
+          : process.env.PUBLIC_BASE_URL || "https://pdf-exporter.com";
+
+        const downloadUrl = `${baseUrl}/downloads/${fileName}`;
 
         usage.count += 1;
         const remaining = Math.max(0, FREE_MAX_EXPORTS - usage.count);
