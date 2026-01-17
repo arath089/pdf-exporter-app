@@ -39,7 +39,13 @@ async function getBrowser() {
 
     browserPromise = withTimeout(
       chromium.launch({
-        args: ["--no-sandbox", "--disable-dev-shm-usage"],
+        args: [
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--single-process",
+          "--no-zygote",
+        ],
       }),
       30000,
       "chromium.launch"
@@ -154,7 +160,7 @@ export async function renderPdf(opts: {
       stamp("newContext");
       const context = await withTimeout(
         browser.newContext(),
-        10000,
+        30000,
         "browser.newContext"
       );
 
@@ -162,7 +168,7 @@ export async function renderPdf(opts: {
         stamp("newPage");
         const page = await withTimeout(
           context.newPage(),
-          10000,
+          30000,
           "context.newPage"
         );
 
