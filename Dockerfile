@@ -41,7 +41,7 @@ RUN cd server && npm ci
 RUN cd web && npm ci
 
 # Install Playwright browser
-RUN cd server && npx playwright install chromium
+RUN cd server && npx playwright install --with-deps chromium
 
 # Copy source
 COPY server ./server

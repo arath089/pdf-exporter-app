@@ -39,13 +39,7 @@ async function getBrowser() {
 
     browserPromise = withTimeout(
       chromium.launch({
-        args: [
-          "--no-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--single-process",
-          "--no-zygote",
-        ],
+        args: ["--no-sandbox", "--disable-dev-shm-usage"],
       }),
       30000,
       "chromium.launch"
