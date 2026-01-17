@@ -2,7 +2,6 @@ FROM node:20-slim
 
 # Let Playwright store browsers here
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV NODE_ENV=production
 
 # Install deps for Playwright/Chromium
 RUN apt-get update && apt-get install -y \
@@ -44,7 +43,7 @@ WORKDIR /app
 COPY server/package*.json ./server/
 COPY web/package*.json ./web/
 
-RUN cd server && npm ci
+RUN cd server && npm ci --include=dev
 RUN cd web && npm ci
 
 # Install browsers into /ms-playwright
@@ -61,5 +60,6 @@ RUN cd web && npm run build
 # Ensure tmp exists for persistent profile
 RUN mkdir -p /tmp/pw-profile && chmod -R 777 /tmp
 
+ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "server/dist/index.js"]
