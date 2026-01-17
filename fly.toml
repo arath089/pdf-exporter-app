@@ -1,6 +1,6 @@
 app = "pdf-exporter"
 
-primary_region = "iad"
+primary_region = "bom"
 
 [build]
   dockerfile = "Dockerfile"
