@@ -11,18 +11,51 @@ function presetTitle(preset: Preset) {
   return "Report";
 }
 
-// Reuse a single browser (much more stable on small VMs)
+function mem(label: string) {
+  const m = process.memoryUsage();
+  console.log(
+    `[MEM] ${label} rss=${Math.round(m.rss / 1e6)}MB heapUsed=${Math.round(
+      m.heapUsed / 1e6
+    )}MB ext=${Math.round(m.external / 1e6)}MB`
+  );
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, rej) =>
+      setTimeout(() => rej(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+// Reuse a single browser (stable on VMs)
 let browserPromise: Promise<Browser> | null = null;
+
 async function getBrowser() {
   if (!browserPromise) {
-    browserPromise = chromium
-      .launch({ args: ["--no-sandbox", "--disable-dev-shm-usage"] })
-      .then((b) => {
-        b.on("disconnected", () => {
-          browserPromise = null;
-        });
-        return b;
+    console.log("[PDF] launching chromium...");
+    mem("before chromium.launch");
+
+    browserPromise = withTimeout(
+      chromium.launch({
+        args: ["--no-sandbox", "--disable-dev-shm-usage"],
+      }),
+      30000,
+      "chromium.launch"
+    ).then((b) => {
+      console.log("[PDF] chromium launched");
+      mem("after chromium.launch");
+
+      b.on("disconnected", () => {
+        console.log(
+          "[PDF] chromium disconnected (likely OOM/crash). Resetting browserPromise."
+        );
+        browserPromise = null;
       });
+
+      return b;
+    });
   }
   return browserPromise;
 }
@@ -47,31 +80,51 @@ export async function renderPdf(opts: {
   return enqueue(async () => {
     const { id, rawText, preset, outDir } = opts;
 
-    const fileName = `${preset}-${id}.pdf`;
-    const filePath = path.join(outDir, fileName);
+    let stage = "start";
+    const stamp = (s: string) => {
+      stage = s;
+      console.log("[STAGE]", stage);
+      mem(stage);
+    };
 
-    // marked can be async depending on version/config
-    const rawHtml = await marked.parse(rawText);
-    const safeHtml = sanitizeHtml(rawHtml, {
-      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-        "img",
-        "h1",
-        "h2",
-        "pre",
-        "code",
-      ]),
-      allowedAttributes: {
-        a: ["href", "name", "target", "rel"],
-        img: ["src", "alt"],
-        code: ["class"],
-        pre: ["class"],
-      },
-      allowedSchemes: ["http", "https", "data"],
-    });
+    const t0 = Date.now();
+    const elapsed = () => `${Date.now() - t0}ms`;
 
-    const title = presetTitle(preset);
+    try {
+      stamp("start");
 
-    const html = `<!doctype html>
+      const fileName = `${preset}-${id}.pdf`;
+      const filePath = path.join(outDir, fileName);
+
+      stamp("marked.parse");
+      const rawHtml = await withTimeout(
+        marked.parse(rawText) as any,
+        15000,
+        "marked.parse"
+      );
+
+      stamp("sanitizeHtml");
+      const safeHtml = sanitizeHtml(rawHtml as any, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+          "img",
+          "h1",
+          "h2",
+          "pre",
+          "code",
+        ]),
+        allowedAttributes: {
+          a: ["href", "name", "target", "rel"],
+          img: ["src", "alt"],
+          code: ["class"],
+          pre: ["class"],
+        },
+        allowedSchemes: ["http", "https", "data"],
+      });
+
+      stamp("buildHtml");
+      const title = presetTitle(preset);
+
+      const html = `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
@@ -95,38 +148,59 @@ export async function renderPdf(opts: {
 </body>
 </html>`;
 
-    const browser = await getBrowser();
-    const context = await browser.newContext();
+      stamp("getBrowser");
+      const browser = await getBrowser();
 
-    try {
-      const page = await context.newPage();
+      stamp("newContext");
+      const context = await withTimeout(
+        browser.newContext(),
+        10000,
+        "browser.newContext"
+      );
 
-      console.log("[PDF] setContent start");
-      await page.setContent(html, {
-        waitUntil: "domcontentloaded",
-        timeout: 20000,
-      });
-      console.log("[PDF] setContent done");
+      try {
+        stamp("newPage");
+        const page = await withTimeout(
+          context.newPage(),
+          10000,
+          "context.newPage"
+        );
 
-      // A tiny delay can help fonts/layout settle in containers
-      await page.waitForTimeout(50);
+        console.log(`[PDF] setContent start (${elapsed()})`);
+        stamp("setContent");
+        await withTimeout(
+          page.setContent(html, { waitUntil: "domcontentloaded" }),
+          20000,
+          "page.setContent"
+        );
+        console.log(`[PDF] setContent done (${elapsed()})`);
 
-      console.log("[PDF] pdf() start");
-      await Promise.race([
-        page.pdf({
-          path: filePath,
-          format: "A4",
-          printBackground: true,
-        }),
-        new Promise<never>((_, rej) =>
-          setTimeout(() => rej(new Error("PDF generation timed out")), 20000)
-        ),
-      ]);
-      console.log("[PDF] pdf() done", fileName);
+        // Small settle delay for fonts/layout
+        await page.waitForTimeout(50);
 
-      return { filePath, fileName };
-    } finally {
-      await context.close();
+        console.log(`[PDF] pdf start (${elapsed()})`);
+        stamp("pdf");
+        await withTimeout(
+          page.pdf({
+            path: filePath,
+            format: "A4",
+            printBackground: true,
+          }),
+          20000,
+          "page.pdf"
+        );
+        console.log(`[PDF] pdf done (${elapsed()}) file=${fileName}`);
+
+        stamp("done");
+        return { filePath, fileName };
+      } finally {
+        stamp("context.close");
+        await withTimeout(context.close(), 10000, "context.close");
+      }
+    } catch (err: any) {
+      console.error("[PDF] FAILED at stage:", stage, "after", elapsed());
+      console.error("[PDF] ERROR:", err?.message || err);
+      throw err;
     }
   });
 }
