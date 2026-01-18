@@ -16,6 +16,7 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 /* ------------------------------------------------------------------ */
 
 const app = express();
+app.set("trust proxy", true);
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
@@ -192,7 +193,11 @@ app.post("/api/create-pdf", async (req, res) => {
     ]);
     console.log("[API] renderPdf done", { fileName });
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const proto =
+      (req.headers["x-forwarded-proto"] as string)?.split(",")[0] ||
+      req.protocol;
+    const host = (req.headers["x-forwarded-host"] as string) || req.get("host");
+    const baseUrl = `${proto}://${host}`;
     const downloadUrl = `${baseUrl}/downloads/${fileName}`;
 
     usage.count += 1;

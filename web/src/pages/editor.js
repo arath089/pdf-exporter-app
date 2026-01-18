@@ -168,7 +168,7 @@ export function renderEditor({ appEl, isWidget, initialToolOutput }) {
       out.innerHTML = `
         <a class="pe-link" href="${
           result.downloadUrl
-        }" target="_blank" rel="noreferrer">Download PDF</a>
+        }" download>Download PDF</a>
         <div style="margin-top:8px; color: var(--muted);">
           ${result.fileName ? `File: <strong>${result.fileName}</strong>` : ""}
         </div>
