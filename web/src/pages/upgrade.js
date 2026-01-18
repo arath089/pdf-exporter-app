@@ -125,7 +125,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeMonthlyUrl
-            }" target="_blank" rel="noreferrer"><button id="btnPro" class="u-btn primary">Upgrade to Pro</button></a>
+            }" rel="noreferrer"><button id="btnPro" class="u-btn primary">Upgrade to Pro</button></a>
             <div style="text-align:center; color: rgba(255,255,255,0.62); font-size: 12px;">Cancel anytime</div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeLifetimeUrl
-            }" target="_blank" rel="noreferrer"><button id="btnLifetime" class="u-btn">Buy Lifetime</button></a>
+            }" rel="noreferrer"><button id="btnLifetime" class="u-btn">Buy Lifetime</button></a>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeDayPassUrl
-            }" target="_blank" rel="noreferrer"><button id="btnDayPass" class="u-btn">Buy Day Pass</button></a>
+            }" rel="noreferrer"><button id="btnDayPass" class="u-btn">Buy Day Pass</button></a>
           </div>
         </div>
       </div>
