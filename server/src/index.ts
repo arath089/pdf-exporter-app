@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import { z } from "zod";
 import { nanoid } from "nanoid";
+import { createCheckoutSession } from "./stripe";
 
 import { renderPdf } from "./pdf";
 import { buildMcpServer } from "./mcpApp";
@@ -114,6 +115,8 @@ app.post("/message", async (req, res) => {
 /* ------------------------------------------------------------------ */
 
 app.use(express.json({ limit: "2mb" }));
+
+app.post("/api/checkout", createCheckoutSession);
 
 /* ------------------------------------------------------------------ */
 /* Health check                                                        */

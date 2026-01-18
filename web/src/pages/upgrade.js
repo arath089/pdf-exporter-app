@@ -1,7 +1,21 @@
 import { getEnv } from "../lib/env.js";
+import { getClientId } from "../lib/clientId.js";
 
 export function renderUpgrade({ appEl }) {
   const env = getEnv();
+
+  const clientId = getClientId();
+
+  async function startCheckout(plan) {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, clientId }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Checkout failed");
+    window.location.href = json.url;
+  }
 
   appEl.innerHTML = `
     <style>
@@ -111,7 +125,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeMonthlyUrl
-            }" target="_blank" rel="noreferrer"><button class="u-btn primary">Upgrade to Pro</button></a>
+            }" target="_blank" rel="noreferrer"><button id="btnPro" class="u-btn primary">Upgrade to Pro</button></a>
             <div style="text-align:center; color: rgba(255,255,255,0.62); font-size: 12px;">Cancel anytime</div>
           </div>
         </div>
@@ -131,7 +145,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeLifetimeUrl
-            }" target="_blank" rel="noreferrer"><button class="u-btn">Buy Lifetime</button></a>
+            }" target="_blank" rel="noreferrer"><button id="btnLifetime" class="u-btn">Buy Lifetime</button></a>
           </div>
         </div>
 
@@ -150,7 +164,7 @@ export function renderUpgrade({ appEl }) {
           <div class="u-cta">
             <a href="${
               env.stripeDayPassUrl
-            }" target="_blank" rel="noreferrer"><button class="u-btn">Buy Day Pass</button></a>
+            }" target="_blank" rel="noreferrer"><button id="btnDayPass" class="u-btn">Buy Day Pass</button></a>
           </div>
         </div>
       </div>
@@ -161,4 +175,14 @@ export function renderUpgrade({ appEl }) {
       </div>
     </div>
   `;
+
+  document
+    .getElementById("btnPro")
+    ?.addEventListener("click", () => startCheckout("pro_monthly"));
+  document
+    .getElementById("btnLifetime")
+    ?.addEventListener("click", () => startCheckout("lifetime"));
+  document
+    .getElementById("btnDayPass")
+    ?.addEventListener("click", () => startCheckout("daypass"));
 }
