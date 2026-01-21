@@ -1,0 +1,11 @@
+{
+  "name": "PDF Exporter",
+  "description": "Export clean, professional PDFs from text or ChatGPT output. Fast, private, and simple.",
+  "version": "1.0.0",
+  "author": "PDF Exporter",
+  "license": "MIT",
+  "endpoints": {
+    "sse": "https://pdf-exporter.com/sse",
+    "message": "https://pdf-exporter.com/message"
+  }
+}

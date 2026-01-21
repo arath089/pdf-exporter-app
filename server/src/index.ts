@@ -264,6 +264,10 @@ app.get("/index.html", (_req, res) => {
   res.sendFile(path.join(WEB_DIST, "index.html"));
 });
 
+app.get(["/", "/upgrade", "/privacy"], (_req, res) => {
+  res.sendFile(path.join(WEB_DIST, "index.html"));
+});
+
 /* ------------------------------------------------------------------ */
 /* Start server                                                        */
 /* ------------------------------------------------------------------ */
