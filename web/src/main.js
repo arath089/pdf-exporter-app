@@ -10,9 +10,10 @@ const isWidget = !!window.openai?.callTool;
 applyTheme({ isWidget });
 
 const route = getRoute({ isWidget });
-if (route.name === "privacy") renderPrivacy({ appEl });
 
-if (route.name === "upgrade") {
+if (route.name === "privacy") {
+  renderPrivacy({ appEl });
+} else if (route.name === "upgrade") {
   renderUpgrade({ appEl });
 } else {
   renderEditor({
