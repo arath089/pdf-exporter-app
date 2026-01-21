@@ -222,7 +222,7 @@ function editorCore(modeText, presetInit, textInit, env) {
   }</span>
       </div>
 
-      <a class="pe-link" id="upgradeLink" href="/upgrade" target="_blank" rel="noreferrer">Upgrade</a>
+      <a class="pe-link" id="upgradeLink" href="/upgrade" rel="noreferrer">Upgrade</a>
     </div>
 
     <textarea id="text" class="pe-textarea" placeholder="Paste or write content here…">${escapeHtml(
