@@ -51,7 +51,7 @@ export function renderEditor({ appEl, isWidget, initialToolOutput }) {
 
             <div class="pe-side-title" style="margin-top:14px;">Privacy</div>
             <div class="pe-side-box">
-              See our <a class="pe-link" href="/privacy">Privacy Policy</a>.
+              See our <a href="/privacy">Privacy Policy</a>.
             </div>
           </aside>
         </div>
