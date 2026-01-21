@@ -262,6 +262,7 @@ app.get("*", (req, res) => {
     return res.status(404).end();
   }
 
+  console.log("[SPA] serving index.html for", req.path);
   res.sendFile(path.join(WEB_DIST, "index.html"));
 });
 
