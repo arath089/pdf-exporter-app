@@ -255,16 +255,13 @@ console.log("WEB_DIST =", WEB_DIST);
 // Serve static assets (JS/CSS + index.html)
 app.use(express.static(WEB_DIST));
 
-// SPA routes (serve index.html for app routes)
-app.get(["/", "/upgrade"], (_req, res) => {
-  res.sendFile(path.join(WEB_DIST, "index.html"));
-});
+// SPA fallback (must be LAST)
+app.get("*", (req, res) => {
+  // Only handle non-API routes
+  if (req.path.startsWith("/api") || req.path.startsWith("/downloads")) {
+    return res.status(404).end();
+  }
 
-app.get("/index.html", (_req, res) => {
-  res.sendFile(path.join(WEB_DIST, "index.html"));
-});
-
-app.get(["/", "/upgrade", "/privacy"], (_req, res) => {
   res.sendFile(path.join(WEB_DIST, "index.html"));
 });
 
