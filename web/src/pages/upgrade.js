@@ -210,9 +210,7 @@ export function renderUpgrade({ appEl }) {
             <li>• Priority improvements</li>
           </ul>
           <div class="u-cta">
-            <a href="${
-              env.stripeMonthlyUrl
-            }" rel="noreferrer"><button id="btnPro" class="u-btn primary">Upgrade to Pro</button></a>
+            <button id="btnPro" class="u-btn primary">Upgrade to Pro</button>
             <div style="text-align:center; color: rgba(255,255,255,0.62); font-size: 12px;">Cancel anytime</div>
           </div>
         </div>
@@ -230,9 +228,7 @@ export function renderUpgrade({ appEl }) {
             <li>• Early access to features</li>
           </ul>
           <div class="u-cta">
-            <a href="${
-              env.stripeLifetimeUrl
-            }" rel="noreferrer"><button id="btnLifetime" class="u-btn">Buy Lifetime</button></a>
+            <button id="btnLifetime" class="u-btn">Buy Lifetime</button>
           </div>
         </div>
 
@@ -249,9 +245,7 @@ export function renderUpgrade({ appEl }) {
             <li>• Great for one-off tasks</li>
           </ul>
           <div class="u-cta">
-            <a href="${
-              env.stripeDayPassUrl
-            }" rel="noreferrer"><button id="btnDayPass" class="u-btn">Buy Day Pass</button></a>
+            <button id="btnDayPass" class="u-btn">Buy Day Pass</button>
           </div>
         </div>
       </div>
@@ -337,13 +331,54 @@ export function renderUpgrade({ appEl }) {
     });
   }
 
+  async function startCheckout(plan, buttonEl) {
+    try {
+      if (buttonEl) {
+        buttonEl.disabled = true;
+        buttonEl.textContent = "Redirecting…";
+      }
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, clientId }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Checkout failed");
+
+      // ✅ Mobile-safe redirect
+      window.location.assign(json.url);
+    } catch (e) {
+      alert(e?.message || "Checkout failed");
+      if (buttonEl) {
+        buttonEl.disabled = false;
+        // restore label based on plan:
+        buttonEl.textContent =
+          plan === "pro_monthly"
+            ? "Upgrade to Pro"
+            : plan === "lifetime"
+            ? "Buy Lifetime"
+            : "Buy Day Pass";
+      }
+    }
+  }
+
   document
     .getElementById("btnPro")
-    ?.addEventListener("click", () => startCheckout("pro_monthly"));
+    ?.addEventListener("click", (e) =>
+      startCheckout("pro_monthly", e.currentTarget)
+    );
+
   document
     .getElementById("btnLifetime")
-    ?.addEventListener("click", () => startCheckout("lifetime"));
+    ?.addEventListener("click", (e) =>
+      startCheckout("lifetime", e.currentTarget)
+    );
+
   document
     .getElementById("btnDayPass")
-    ?.addEventListener("click", () => startCheckout("daypass"));
+    ?.addEventListener("click", (e) =>
+      startCheckout("daypass", e.currentTarget)
+    );
 }
