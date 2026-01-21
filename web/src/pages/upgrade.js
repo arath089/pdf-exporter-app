@@ -71,6 +71,93 @@ export function renderUpgrade({ appEl }) {
       .u-btn:hover{ filter: brightness(1.05); }
       .u-foot{ text-align:center; margin-top: 26px; color: rgba(255,255,255,0.62); font-size: 13px; line-height:1.6; }
       .u-link{ color: rgba(255,255,255,0.75); text-decoration:none; }
+
+      @media (max-width: 520px){
+      .u-wrap{
+        padding: 28px 14px 40px;
+      }
+
+      .u-title{
+        font-size: 28px;
+      }
+
+      .u-sub{
+        font-size: 14px;
+      }
+
+      .u-grid{
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .u-card{
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      .u-price{
+        font-size: 30px;
+      }
+
+      .u-btn{
+        height: 48px;
+        font-size: 16px;
+      }
+
+      .u-pills{
+        gap: 8px;
+      }
+
+      .u-pill{
+        font-size: 12px;
+        padding: 7px 10px;
+      }
+    }
+      @media (max-width: 520px){
+      .u-title{ font-size: 28px; }
+      .u-sub{ font-size: 15px; }
+
+      /* Turn grid into horizontal slider */
+      .u-grid{
+        display: flex;
+        overflow-x: auto;
+        gap: 14px;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .u-card{
+        min-width: 86%;
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+        padding: 18px;
+      }
+
+      .u-price{ font-size: 32px; }
+      .u-btn{ height: 52px; font-size: 16px; }
+
+      /* Hide scrollbar */
+      .u-grid::-webkit-scrollbar{ display:none; }
+      .u-grid{ scrollbar-width: none; }
+
+      /* Add dots */
+      .u-dots{
+        display:flex;
+        justify-content:center;
+        gap:8px;
+        margin-top: 12px;
+      }
+      .u-dot{
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.25);
+      }
+      .u-dot.active{
+        background: rgba(255,255,255,0.8);
+      }
+    }
     </style>
 
     <div class="u-wrap">
@@ -169,12 +256,86 @@ export function renderUpgrade({ appEl }) {
         </div>
       </div>
 
+      <div class="u-dots" id="dots"></div>
+
       <div class="u-foot">
         Payments via Stripe · We’ll wire “Pro unlock” to accounts next.
         <br/>Free exports reset daily (UTC).
       </div>
     </div>
   `;
+
+  // Mobile slider: auto-focus Pro card (Most popular)
+  const grid = document.querySelector(".u-grid");
+  if (grid) {
+    const cards = Array.from(grid.querySelectorAll(".u-card"));
+    const dotsEl = document.getElementById("dots");
+
+    // Dots (mobile only)
+    if (dotsEl && cards.length) {
+      dotsEl.innerHTML = cards
+        .map((_, i) => `<div class="u-dot" data-i="${i}"></div>`)
+        .join("");
+    }
+
+    function setActiveDot(idx) {
+      if (!dotsEl) return;
+      dotsEl
+        .querySelectorAll(".u-dot")
+        .forEach((d, i) => d.classList.toggle("active", i === idx));
+    }
+
+    // Find the Pro card (featured / most popular)
+    const proIndex = cards.findIndex((c) => c.classList.contains("featured"));
+    if (proIndex >= 0) {
+      // Scroll Pro into view on mobile
+      cards[proIndex].scrollIntoView({
+        behavior: "instant",
+        inline: "center",
+        block: "nearest",
+      });
+      setActiveDot(proIndex);
+    } else {
+      setActiveDot(0);
+    }
+
+    // Update dot on scroll
+    grid.addEventListener(
+      "scroll",
+      () => {
+        const mid = grid.scrollLeft + grid.clientWidth / 2;
+        let best = 0;
+        let bestDist = Infinity;
+
+        cards.forEach((c, i) => {
+          const rect = c.getBoundingClientRect();
+          const center = rect.left + rect.width / 2;
+          const dist = Math.abs(center - window.innerWidth / 2);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = i;
+          }
+        });
+
+        setActiveDot(best);
+      },
+      { passive: true }
+    );
+
+    // Tap dots
+    dotsEl?.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const i = Number(t.dataset.i);
+      if (!Number.isFinite(i) || !cards[i]) return;
+      cards[i].scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+      setActiveDot(i);
+    });
+  }
 
   document
     .getElementById("btnPro")

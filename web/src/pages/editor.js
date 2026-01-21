@@ -188,8 +188,11 @@ export function renderEditor({ appEl, isWidget, initialToolOutput }) {
 function editorCore(modeText, presetInit, textInit, env) {
   return `
     <div class="pe-header">
-      <h1 class="pe-title">PDF Exporter</h1>
-      <div class="pe-badge">${modeText}</div>
+      <div class="pe-brand">
+        <img class="pe-logo" src="/favicon.ico" alt="PDF Exporter" />
+        <h1 class="pe-title">PDF Exporter</h1>
+      </div>
+    <div class="pe-badge">${modeText}</div>
     </div>
 
     <div class="pe-toolbar">

@@ -252,3 +252,108 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+.pe-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pe-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+}
+
+.pe-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 520px) {
+  .pe-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pe-toolbar {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  /* Make the Generate button full width */
+  .pe-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Keep preset + upgrade readable */
+  .pe-select,
+  .pe-link {
+    width: 100%;
+  }
+
+  /* Free text stays readable */
+  #freeStatus {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Mobile typography + touch targets */
+@media (max-width: 520px) {
+  .pe-root {
+    padding: 14px;
+  }
+
+  .pe-title {
+    font-size: 20px;
+  }
+
+  .pe-badge {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .pe-label {
+    font-size: 15px;
+  }
+
+  .pe-select,
+  .pe-link,
+  .pe-button {
+    height: 48px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .pe-toolbar {
+    padding: 12px;
+  }
+
+  .pe-status {
+    font-size: 14px;
+  }
+
+  #freeStatus {
+    font-size: 14px;
+  }
+
+  .pe-textarea {
+    font-size: 16px; /* prevents iOS zoom + more readable */
+    height: 320px;
+    border-radius: 14px;
+  }
+
+  .pe-out {
+    font-size: 14px;
+  }
+
+  .pe-side-box {
+    font-size: 14px;
+  }
+}
