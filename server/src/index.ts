@@ -255,6 +255,12 @@ console.log("WEB_DIST =", WEB_DIST);
 // Serve static assets (JS/CSS + index.html)
 app.use(express.static(WEB_DIST));
 
+// OpenAI domain verification
+app.get("/.well-known/openai-apps-challenge", (_req, res) => {
+  res.type("text/plain");
+  res.send("7BdWV2o7uQSI5EeZtfIDLpzRKMFpTxBC-uT625i7dHs");
+});
+
 // SPA fallback (must be LAST)
 app.get("*", (req, res) => {
   // Only handle non-API routes
